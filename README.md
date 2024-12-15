@@ -11,7 +11,16 @@ This tool is here to save the day! Upload an image, and **BOOM**—it extracts *
 Perfect for **designers**, **developers**, **photographers**, and anyone who lives and breathes colors 🌈.
 
 ---
+## 📸 **Screenshots**
+-  **Home Page**
+  
+ ![alt text](https://github.com/nikhilthesingh/TriPallets/blob/master/Screenshot%202024-12-16%20021202.png?raw=true)
 
+-  **Color Palette Output Page** 
+  
+ ![alt text](https://github.com/nikhilthesingh/TriPallets/blob/master/Screenshot%202024-12-16%20021318.png?raw=true)
+
+---
 ## 🛠️ **Features**  
 - 📤 **Upload Any Image**: Supports popular formats like JPEG and PNG.  
 - 🎨 **Extract 5 Dominant Colors**: Instantly displays the top 5 colors from the image along with their HEX codes.  
@@ -92,6 +101,7 @@ http://localhost:8080/ColorPaletteTool
 - Apache Commons Math library performs K-Means clustering.
 - Grid logic is rendered dynamically over the uploaded image.
 
+---
 ## 🐛 Troubleshooting
 
 ### 🚨 Common Issues
