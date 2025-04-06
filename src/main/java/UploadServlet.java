@@ -25,42 +25,62 @@ public class UploadServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final String UPLOAD_DIR = "uploads";
 
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Get the real path of the application for saving files
         String appPath = request.getServletContext().getRealPath("");
         String savePath = appPath + File.separator + UPLOAD_DIR;
 
+        // Create the upload directory if it doesn't exist
         File fileSaveDir = new File(savePath);
         if (!fileSaveDir.exists()) {
             fileSaveDir.mkdirs();
         }
 
         String fileName = null;
+
+        // Process the uploaded file
         for (Part part : request.getParts()) {
             fileName = extractFileName(part);
             if (fileName != null && !fileName.isEmpty()) {
                 String filePath = savePath + File.separator + fileName;
                 part.write(filePath);
 
-                // Analyze the image
-                BufferedImage img = ImageIO.read(new File(filePath));
-                String dominantColor = getDominantColor(img);
-                String colorPalette = getColorPalette(img);
-                String compositionAnalysis = analyzeRuleOfThirds(img);
+                try {
+                    // Read the uploaded image
+                    BufferedImage img = ImageIO.read(new File(filePath));
+                    if (img == null) {
+                        throw new IOException("Failed to read the image.");
+                    }
 
-                // Set attributes for JSP (if needed for result display)
-                request.setAttribute("imagePath", UPLOAD_DIR + "/" + fileName);
-                request.setAttribute("dominantColor", dominantColor);
-                request.setAttribute("colorPalette", colorPalette);
-                request.setAttribute("compositionAnalysis", compositionAnalysis);
+                    // Analyze the image
+                    String dominantColor = getDominantColor(img);
+                    String colorPalette = getColorPalette(img);
+                    String compositionAnalysis = analyzeRuleOfThirds(img);
 
-                // Forward to a result page (if needed)
-                request.getRequestDispatcher("/result.jsp").forward(request, response);
-                return;
+                    // Set attributes for JSP
+                    request.setAttribute("imagePath", UPLOAD_DIR + "/" + fileName);
+                    request.setAttribute("dominantColor", dominantColor != null ? dominantColor : "#ffffff");
+                    request.setAttribute("colorPalette", colorPalette != null ? colorPalette : "#ffffff");
+                    request.setAttribute("compositionAnalysis", compositionAnalysis != null ? compositionAnalysis : "No analysis available.");
+
+                    // Forward to result page
+                    request.getRequestDispatcher("/result.jsp").forward(request, response);
+                    return;
+                } catch (IOException e) {
+                    System.out.println("Error processing image: " + e.getMessage());
+                    response.getWriter().println("Error: Failed to process the uploaded image.");
+                    return;
+                }
             }
         }
-        response.getWriter().println("No file uploaded");
+
+        response.getWriter().println("No file uploaded.");
     }
 
+    /**
+     * Extracts the file name from the content-disposition header of a Part object.
+     */
     private String extractFileName(Part part) {
         String contentDisp = part.getHeader("content-disposition");
         String[] tokens = contentDisp.split(";");
@@ -72,6 +92,9 @@ public class UploadServlet extends HttpServlet {
         return "";
     }
 
+    /**
+     * Calculates the dominant color of an image.
+     */
     private String getDominantColor(BufferedImage img) {
         int width = img.getWidth();
         int height = img.getHeight();
@@ -93,11 +116,14 @@ public class UploadServlet extends HttpServlet {
         return String.format("#%02x%02x%02x", avgR, avgG, avgB); // Return hex code of average color
     }
 
+    /**
+     * Generates a color palette using K-Means clustering.
+     */
     private String getColorPalette(BufferedImage img) {
-        // Prepare data for KMeans clustering
         List<Clusterable> points = new ArrayList<>();
         int width = img.getWidth();
         int height = img.getHeight();
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 int rgb = img.getRGB(x, y);
@@ -106,11 +132,9 @@ public class UploadServlet extends HttpServlet {
             }
         }
 
-        // Perform KMeans clustering
         KMeansPlusPlusClusterer<Clusterable> clusterer = new KMeansPlusPlusClusterer<>(5);
         List<CentroidCluster<Clusterable>> clusters = clusterer.cluster(points);
 
-        // Get cluster centers
         StringBuilder colorPalette = new StringBuilder();
         for (CentroidCluster<Clusterable> cluster : clusters) {
             double[] center = cluster.getCenter().getPoint();
@@ -121,42 +145,22 @@ public class UploadServlet extends HttpServlet {
             colorPalette.append(hexColor).append(" ");
         }
 
-        return colorPalette.toString();
+        return colorPalette.toString().trim();
     }
 
+    /**
+     * Analyzes the image for Rule of Thirds composition using edge detection.
+     */
     private String analyzeRuleOfThirds(BufferedImage img) {
         int width = img.getWidth();
         int height = img.getHeight();
         int thirdWidth = width / 3;
         int thirdHeight = height / 3;
 
-        boolean hasHorizontalLines = false;
-        for (int y = thirdHeight - 5; y <= thirdHeight + 5; y++) {
-            int whitePixelCount = 0;
-            for (int x = 0; x < width; x++) {
-                if (img.getRGB(x, y) == Color.WHITE.getRGB()) {
-                    whitePixelCount++;
-                }
-            }
-            if (whitePixelCount > (width / 5)) {
-                hasHorizontalLines = true;
-                break;
-            }
-        }
+        boolean[][] edgeMap = detectEdges(img);
 
-        boolean hasVerticalLines = false;
-        for (int x = thirdWidth - 5; x <= thirdWidth + 5; x++) {
-            int whitePixelCount = 0;
-            for (int y = 0; y < height; y++) {
-                if (img.getRGB(x, y) == Color.WHITE.getRGB()) {
-                    whitePixelCount++;
-                }
-            }
-            if (whitePixelCount > (height / 5)) {
-                hasVerticalLines = true;
-                break;
-            }
-        }
+        boolean hasHorizontalLines = checkForEdges(edgeMap, thirdHeight - 5, thirdHeight + 5, true, width, height);
+        boolean hasVerticalLines = checkForEdges(edgeMap, thirdWidth - 5, thirdWidth + 5, false, width, height);
 
         String analysis;
         if (hasHorizontalLines && hasVerticalLines) {
@@ -168,7 +172,56 @@ public class UploadServlet extends HttpServlet {
         } else {
             analysis = "The image does not have strong evidence of following the Rule of Thirds.";
         }
-
         return analysis;
+    }
+
+    /**
+     * Detects edges in the image using a simple gradient-based approach.
+     */
+    private boolean[][] detectEdges(BufferedImage img) {
+        int width = img.getWidth();
+        int height = img.getHeight();
+        boolean[][] edgeMap = new boolean[height][width];
+
+        for (int y = 1; y < height - 1; y++) {
+            for (int x = 1; x < width - 1; x++) {
+                Color center = new Color(img.getRGB(x, y));
+                Color left = new Color(img.getRGB(x - 1, y));
+                Color right = new Color(img.getRGB(x + 1, y));
+                Color top = new Color(img.getRGB(x, y - 1));
+                Color bottom = new Color(img.getRGB(x, y + 1));
+
+                int gx = (right.getRed() - left.getRed()) + 2 * (right.getGreen() - left.getGreen()) + (right.getBlue() - left.getBlue());
+                int gy = (bottom.getRed() - top.getRed()) + 2 * (bottom.getGreen() - top.getGreen()) + (bottom.getBlue() - top.getBlue());
+
+                if (Math.sqrt(gx * gx + gy * gy) > 100) {
+                    edgeMap[y][x] = true;
+                }
+            }
+        }
+        return edgeMap;
+    }
+
+    /**
+     * Checks for significant edges along the rule of thirds lines.
+     */
+    private boolean checkForEdges(boolean[][] edgeMap, int start, int end, boolean horizontal, int width, int height) {
+        for (int i = start; i <= end; i++) {
+            int count = 0;
+            if (horizontal) {
+                for (int x = 0; x < width; x++) {
+                    if (i >= 0 && i < height && edgeMap[i][x]) count++;
+                }
+            } else {
+                for (int y = 0; y < height; y++) {
+                    if (i >= 0 && i < width && edgeMap[y][i]) count++;
+                }
+            }
+            int threshold = Math.max(10, (horizontal ? width : height) / 20);
+            if (count > threshold) {
+                return true;
+            }
+        }
+        return false;
     }
 }
