@@ -2,12 +2,12 @@
 
 ---
 
-## 📌 **CLICK BELOW to get project's full README, setup guides, and more :- **  
-This repository contains two flavors of the tool. Pick your version below:
-> *Recommended to select Version 2.0 for better experience*  
+## 📌 **CLICK BELOW to get project's full README, setup guides, and more :-**  
+This repository contains two flavors of the tool. Pick your version below:  
+> *Recommended to select Version 2.0 for better experience*
 
-- **[Version 2.0 (Latest)](https://github.com/nikhilthesingh/TriPallets/tree/version-2.0)** - *The upgraded edition with a sleek UI and cool new features.*  
-- **[Version 1.0 (Original)](https://github.com/nikhilthesingh/TriPallets/tree/version-1.0)** - *The classic build with the essentials.*  
+- <a href="https://github.com/nikhilthesingh/TriPallets/tree/version-2.0" target="_blank">**Version 2.0 (Latest)**</a> - *The upgraded edition with a sleek UI and cool new features.*
+- <a href="https://github.com/nikhilthesingh/TriPallets/tree/version-1.0" target="_blank">**Version 1.0 (Original)**</a> - *The classic build with the essentials.*
 
 --- 
 ## 🚀 **Project Overview**  
