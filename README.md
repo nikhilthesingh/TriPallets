@@ -18,7 +18,21 @@ This tool empowers you to upload an image and instantly:
 - 🌈 **Identify the dominant color** that defines the image’s tone.  
 - 📏 **Analyze composition** using the Rule of Thirds for design precision.  
 
-Tailored for designers, developers, and photographers, Tri Matic combines technical prowess with practical utility, making it an essential asset for creative and professional projects.
+# Tailored for designers, developers, and photographers, Tri Matic combines technical prowess with practical utility, making it an essential asset for creative and professional projects.
+
+## 🛠️ **Tech Stack Breakdown**  
+Tri Matic is built on a robust stack of technologies, blending frontend finesse with backend power:  
+
+| **Layer / Purpose**           | **Technology Used**               | **Description**                                                                 |
+|-------------------------------|-----------------------------------|---------------------------------------------------------------------------------|
+| **Frontend (UI)**             | HTML, CSS, Javascript, JSP        | Crafts the image upload interface and displays results like the color palette.  |
+| **Backend (Server-Side)**     | Java (Servlets)                   | Powers image processing, color extraction, and Rule of Thirds logic.            |
+| **Web Framework**             | Java Servlet API                  | Enables dynamic web content generation for seamless user interactions.          |
+| **Image Processing & Logic**  | Apache Commons Math3 (K-Means)    | Clusters pixel data to identify dominant colors and generate palettes.          |
+| **Build/Project Structure**   | Eclipse IDE (Dynamic Web Project) | Structures the Java EE project with WebContent, WEB-INF, and src directories.   |
+| **Web Server**                | Apache Tomcat 9+                  | Hosts and deploys the servlet-based application for reliable performance.      |
+
+
 ---
 
 ## 🔍 **Recap of Versions**  
